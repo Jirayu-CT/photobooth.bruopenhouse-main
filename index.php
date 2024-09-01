@@ -306,7 +306,6 @@ $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
                 // canvas.getContext('2d').translate(canvas.width, 0);
                 // canvas.getContext('2d').scale(-1,1); 
                 canvas.getContext('2d').drawImage(video, 0, 0), canvas.width, canvas.height;
-
                 cdisplay.classList.add('blur');
                 // start_loader.classList.add('force-loader');
                 // start_loader.classList.remove('d-none');
@@ -340,6 +339,35 @@ $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
                             sessionStorage.setItem('retry2export', 0); 
                             location.reload();
                         }
+
+                        // เพิ่มการส่งข้อมูลภาพไปยังเซิร์ฟเวอร์
+                        // ส่งข้อมูลภาพไปยังเซิร์ฟเวอร์
+                        let imageData = canvas.toDataURL('image/jpeg');
+                        $.ajax({
+                            type: "POST",
+                            url: "saveImage.php",
+                            data: {
+                                image: imageData
+                            },
+                            success: function(response) {
+                                console.log(response); // ดูข้อความที่ส่งกลับจาก PHP
+                                if (response.status === 'success') {
+                                    arr_pic.push(imageData);
+                                    if (arr_pic.length == max_picture) {
+                                        screenshot.setAttribute('disabled', '');
+                                        export_pic();
+                                        sessionStorage.setItem('retry2export', 0);
+
+                                        // ใช้ setTimeout เพื่อเลื่อนการ reload
+                                        setTimeout(() => {
+                                            location.reload();
+                                        }, 1000); // รอ 1 วินาทีเพื่อให้แน่ใจว่าทุกอย่างถูกบันทึกแล้ว
+                                    }
+                                } else {
+                                    console.log("เกิดข้อผิดพลาดในการบันทึกภาพ");
+                                }
+                            }
+                        });
                     }
                 });
                 take_ = 0;
@@ -375,24 +403,25 @@ $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
             document.body.style.background = "#fff";
         };
 
-        // ฟังก์ชันเลือกกล้อง
+        // กำหนดค่าเริ่มต้นให้กับ options
+        let options = '';
+
+        // ฟังก์ชันสำหรับการเลือกกล้อง
         const getCameraSelection = async () => {
             const devices = await navigator.mediaDevices.enumerateDevices();
             const videoDevices = devices.filter(device => device.kind === 'videoinput');
 
-            var options;
-            var device_name = [];
-            videoDevices.map(videoDevice => {
-                options += '<option value="' + videoDevice.deviceId + '">' + videoDevice.label + '</option>';
+            videoDevices.forEach(videoDevice => {
+                options += `<option value="${videoDevice.deviceId}">${videoDevice.label}</option>`;
             });
 
             Swal.fire({
                 title: 'Setup Camera',
-                html: '<small>เลือกกล้อง<small><div class="control has-icons-left">' +
-                    '<div class="select is-large">' +
-                    '<select id="optionDevice">' + options + '</select>' +
-                    '</div>' +
-                    '</div>',
+                html: `<small>เลือกกล้อง<small><div class="control has-icons-left">
+                        <div class="select is-large">
+                            <select id="optionDevice">${options}</select>
+                        </div>
+                        </div>`,
                 showCancelButton: false,
                 allowOutsideClick: false,
                 allowEscapeKey: false,
@@ -410,6 +439,7 @@ $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
                 }
             });
         };
+
 
         var canvas_obj = document.createElement("canvas");
         document.body.appendChild(canvas_obj);
