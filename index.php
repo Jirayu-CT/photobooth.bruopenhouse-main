@@ -118,6 +118,11 @@ $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
                 })
         }
 
+        video {
+            transform: scaleX(-1);
+        }
+
+
     </style>
 </head>
 
@@ -260,12 +265,15 @@ $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
         let camera_device;
         let constraints;
 
+        
+
+
         constraints = {
             video: {
                 // width: 3840,
                 // height: 2160,
-                width: { ideal: 3840}, //1920
-                height: { ideal: 2160}, //1080
+                width: { ideal: 1920}, //1920
+                height: { ideal: 1080}, //1080
                 aspectRatio: 16 / 9}
         };
 
@@ -295,11 +303,18 @@ $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
                 c.html("");
 
                 // กำหนดขนาดของแคนวาสให้เป็นสัดส่วน 16:9
-                canvas.width = 3840; // Example width 1920 3840
-                canvas.height = 2160; // Example height 1080 2160
+                canvas.width = 1920; // Example width 1920 3840
+                canvas.height = 1080; // Example height 1080 2160
 
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
+                canvas.width = video.videoWidth; //video.videoWidth
+                canvas.height = video.videoHeight; //video.videoHeight
+
+                // // เพิ่มการสะท้อนภาพเหมือนกระจก
+                // const ctx = canvas.getContext('2d');
+                // ctx.filter = 'brightness(1.8) contrast(1.2) saturate(1.3) sharpen(1.1)';
+                // ctx.translate(canvas.width, 0);  // เลื่อนตำแหน่งไปยังด้านขวาสุด
+                // ctx.scale(-1, 1);  // สะท้อนภาพในแนวนอน
+                // ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
                 // ปรับปรุงฟิลเตอร์สำหรับภาพ
                 canvas.getContext('2d').filter = 'brightness(1.1) contrast(1.2) saturate(1.3) sharpen(1.1)';;
@@ -378,6 +393,8 @@ $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
 
         screenshot.onclick = doScreenshot;
 
+        
+
         // ฟังก์ชันเริ่มการสตรีมวิดีโอ
         const startStream = async (constraints) => {
             play.classList.add('d-none');
@@ -394,7 +411,9 @@ $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
 
         const handleStream = async (stream) => {
             video.srcObject = stream;
+            video.style.transform = 'scaleX(-1)'; // สะท้อนวิดีโอในแนวนอน
             await delay(500);
+
             wl.classList.add('d-none');
             cdisplay.classList.remove('d-none');
             screenshot.classList.remove('d-none');
